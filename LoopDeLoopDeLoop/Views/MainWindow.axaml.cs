@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -21,28 +23,22 @@ public partial class MainWindow : Window
     
     private void CreateButtons()
     {
-        var items = new List<string> { "Item1", "Item2", "Item3" }; // Your array here
-        var buttonsContainer = this.FindControl<ItemsControl>("ButtonsContainer");
-
-        foreach (var item in items)
-        {
-            var button = new Button
-            {
-                Content = item,
-                Margin = new Thickness(2)
-            };
-            // Optionally, handle the Click event of the button
-            button.Click += (sender, e) =>
-            {
-                // Handle button click
-            };
-            buttonsContainer.Items.Add(button);
-        }
+        // TODO
     }
 
     public void CreateLists()
     {
+        string[] allFiles;
         
+        if (Directory.Exists("./Assets/Loops"))
+        {
+            allFiles = Directory.GetFiles("Assets/Loops", "*", SearchOption.AllDirectories);
+            Console.WriteLine(allFiles);
+        }
+        else
+        {
+            throw new DirectoryNotFoundException("Folder that stores the loops could not be found (Assets/Loops). Check it exists or reinstall program");
+        }
     }
     
     private void InitializeComponent()
