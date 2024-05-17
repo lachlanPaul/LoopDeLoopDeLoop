@@ -4,21 +4,39 @@ using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using LoopDeLoopDeLoop.Components;
 
 namespace LoopDeLoopDeLoop.Views;
 
 public partial class MainWindow : Window
 {
-    public List<LoopFile> Drums;
-    public List<LoopFile> Guitar;
-    public List<LoopFile> Piano;
-    public List<LoopFile> Synth;
+    private List<LoopFile> Drums;
+    private List<LoopFile> Bass;
+    private List<LoopFile> Guitar;
+    private List<LoopFile> Piano;
+    private List<LoopFile> Synth;
+    private List<LoopFile> Custom;
+    private List<LoopFile> Undefined;
+
+    public AudioPlayer AudioPlayer;
     
     public MainWindow()
     {
+        Drums = new List<LoopFile>();
+        Bass = new List<LoopFile>();
+        Guitar = new List<LoopFile>();
+        Piano = new List<LoopFile>();
+        Synth = new List<LoopFile>();
+        Custom = new List<LoopFile>();
+        Undefined = new List<LoopFile>();
+        
+        AudioPlayer = new AudioPlayer();
+        
         InitializeComponent();
-        CreateButtons();
+        // CreateButtons();
+        CreateLists();
     }
     
     private void CreateButtons()
@@ -26,18 +44,39 @@ public partial class MainWindow : Window
         // TODO
     }
 
-    public void CreateLists()
+    private void CreateLists()
     {
-        string[] allFiles;
-        
-        if (Directory.Exists("./Assets/Loops"))
+        string audioFilePath = Path.Combine("Assets", "Loops");
+        string[] allFiles = Directory.GetFiles(audioFilePath, "*.*", SearchOption.AllDirectories);
+
+        foreach (string filePath in allFiles)
         {
-            allFiles = Directory.GetFiles("Assets/Loops", "*", SearchOption.AllDirectories);
-            Console.WriteLine(allFiles);
-        }
-        else
-        {
-            throw new DirectoryNotFoundException("Folder that stores the loops could not be found (Assets/Loops). Check it exists or reinstall program");
+            LoopFile newLoop = new LoopFile(filePath);
+            switch (newLoop.GetCategory())
+            {
+                case "Drums":
+                    Drums.Add(newLoop);
+                    break;
+                case "Bass":
+                    Bass.Add(newLoop);
+                    break;
+                case "Guitar":
+                    Guitar.Add(newLoop);
+                    break;
+                case "Piano":
+                    Piano.Add(newLoop);
+                    break;
+                case "Synth":
+                    Synth.Add(newLoop);
+                    break;
+                case "Custom":
+                    Custom.Add(newLoop);
+                    break;
+                case "Undefined":
+                    Undefined.Add(newLoop);
+                    break;
+            }
+            // newLoop.OutputLoopInfo();
         }
     }
     
