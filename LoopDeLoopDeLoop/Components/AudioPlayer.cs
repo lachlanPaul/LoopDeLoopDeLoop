@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using LibVLCSharp.Shared;
 
 namespace LoopDeLoopDeLoop.Components;
@@ -10,8 +11,18 @@ public class AudioPlayer
 
     public void Play(LoopFile loopToPlay)
     {
-        _mediaPlayer.Media = new Media(libVLC, loopToPlay.GetFilePath(), FromType.FromPath);
-        _mediaPlayer.Play();
+        try
+        {
+            _mediaPlayer.Media = new Media(libVLC, loopToPlay.GetFilePath(), FromType.FromPath);
+            _mediaPlayer.Play();
+        }
+        catch (FileNotFoundException)
+        {
+            System.Diagnostics.Debug.WriteLine($"{loopToPlay.GetFilePath()} could not be found!");
+            
+            // Running this to clean up, just in case
+            Stop();
+        }
     }
 
     /// <summary>

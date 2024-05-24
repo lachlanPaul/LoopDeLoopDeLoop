@@ -1,52 +1,73 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
-using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
+using Avalonia.Media;
 using LoopDeLoopDeLoop.Components;
 
 namespace LoopDeLoopDeLoop.Views;
 
 public partial class MainWindow : Window
 {
-    private List<LoopFile> Drums;
-    private List<LoopFile> Bass;
-    private List<LoopFile> Guitar;
-    private List<LoopFile> Piano;
-    private List<LoopFile> Synth;
-    private List<LoopFile> Custom;
-    private List<LoopFile> Undefined;
+    private List<LoopFile> _drums;
+    private List<LoopFile> _bass;
+    private List<LoopFile> _guitar;
+    private List<LoopFile> _piano;
+    private List<LoopFile> _synth;
+    private List<LoopFile> _custom;
+    private List<LoopFile> _undefined;
 
     public AudioPlayer AudioPlayer;
     
     public MainWindow()
     {
-        Drums = new List<LoopFile>();
-        Bass = new List<LoopFile>();
-        Guitar = new List<LoopFile>();
-        Piano = new List<LoopFile>();
-        Synth = new List<LoopFile>();
-        Custom = new List<LoopFile>();
-        Undefined = new List<LoopFile>();
+        _drums = new List<LoopFile>();
+        _bass = new List<LoopFile>();
+        _guitar = new List<LoopFile>();
+        _piano = new List<LoopFile>();
+        _synth = new List<LoopFile>();
+        _custom = new List<LoopFile>();
+        _undefined = new List<LoopFile>();
         
         AudioPlayer = new AudioPlayer();
         
         InitializeComponent();
-        // CreateButtons();
         CreateLists();
+        CreateButton(_drums[0]);
+        
+        var newLoopMenuItem = this.FindControl<MenuItem>("NewLoopMenuItem");
+        newLoopMenuItem.Click += NewLoopMenuItem_Click;
     }
     
-    private void CreateButtons()
+    private void CreateButton(LoopFile loop)
     {
-        // TODO
+        var buttonsContainer = this.FindControl<ItemsControl>("ButtonsContainer");
+
+        var loopButton = new Button
+        {
+            Content = loop.GetFileName(),
+            Width = 160,
+            Height = 40
+        };
+
+        loopButton.Click += (sender, e) => 
+        {
+            AudioPlayer.Play(loop);
+        };
+
+        buttonsContainer.Items.Add(loopButton);
     }
 
     private void CreateLists()
     {
         string audioFilePath = Path.Combine("Assets", "Loops");
+        if (!Directory.Exists(audioFilePath))
+        {
+            Directory.CreateDirectory(audioFilePath);
+            System.Diagnostics.Debug.WriteLine("Loops folder could not be found, making a new one now.\n" +
+                                               "To populate with the default loops, it's recommended you re-download the app, or make an issue on Github.");
+        }
         string[] allFiles = Directory.GetFiles(audioFilePath, "*.*", SearchOption.AllDirectories);
 
         foreach (string filePath in allFiles)
@@ -55,28 +76,45 @@ public partial class MainWindow : Window
             switch (newLoop.GetCategory())
             {
                 case "Drums":
-                    Drums.Add(newLoop);
+                    _drums.Add(newLoop);
                     break;
                 case "Bass":
-                    Bass.Add(newLoop);
+                    _bass.Add(newLoop);
                     break;
                 case "Guitar":
-                    Guitar.Add(newLoop);
+                    _guitar.Add(newLoop);
                     break;
                 case "Piano":
-                    Piano.Add(newLoop);
+                    _piano.Add(newLoop);
                     break;
                 case "Synth":
-                    Synth.Add(newLoop);
+                    _synth.Add(newLoop);
                     break;
                 case "Custom":
-                    Custom.Add(newLoop);
+                    _custom.Add(newLoop);
                     break;
                 case "Undefined":
-                    Undefined.Add(newLoop);
+                    _undefined.Add(newLoop);
                     break;
             }
             // newLoop.OutputLoopInfo();
+        }
+    }
+
+    private async void NewLoopMenuItem_Click(object? sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog();
+        dialog.Title = "Select File for Custom Loop";
+        dialog.Filters.Add(new FileDialogFilter {Extensions = new List<string> {"wav", "mp3", "flac"}});
+
+        string[] result = await dialog.ShowAsync(this);
+
+        if (result != null && result.Length > 0)
+        {
+            FileInfo file = new FileInfo(result[0]);
+            file = file.CopyTo(@"Assets\Loops\Custom\");
+            LoopFile newLoop = new LoopFile(file.DirectoryName);
+            CreateButton(newLoop);
         }
     }
     
