@@ -4,7 +4,6 @@ using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media;
 using LoopDeLoopDeLoop.Components;
 
 namespace LoopDeLoopDeLoop.Views;
@@ -35,56 +34,54 @@ public partial class MainWindow : Window
     private List<Button> CurrentCategory;
     
     public AudioPlayer AudioPlayer;
-    
-    
+
+
     public MainWindow()
     {
         _drums = new List<LoopFile>();
         _drumsButtons = new List<Button>();
-        
+
         _bass = new List<LoopFile>();
         _bassButtons = new List<Button>();
-        
+
         _guitar = new List<LoopFile>();
         _guitarButtons = new List<Button>();
-        
+
         _piano = new List<LoopFile>();
         _pianoButtons = new List<Button>();
-        
+
         _synth = new List<LoopFile>();
         _synthButtons = new List<Button>();
-        
+
         _custom = new List<LoopFile>();
         _customButtons = new List<Button>();
-        
+
         _undefined = new List<LoopFile>();
         _undefinedButtons = new List<Button>();
-        
+
         AudioPlayer = new AudioPlayer();
-        
+
         InitializeComponent();
         CreateLoops();
-        DisplayButtons(_drumsButtons);
         
-        // var newLoopMenuItem = this.FindControl<MenuItem>("NewLoopMenuItem");
-        // newLoopMenuItem.Click += NewLoopMenuItem_Click;
-    }
-    
-    private Button CreateButton(LoopFile loop)
-    {
-        var loopButton = new Button
-        {
-            Content = loop.GetFileName(),
-            Width = 160,
-            Height = 40
+        List<Button> categoryButtons = new List<Button> { 
+            CreateCategoryButton("Drums", _drumsButtons),
+            CreateCategoryButton("Bass", _bassButtons),
+            CreateCategoryButton("Guitar", _guitarButtons),
+            CreateCategoryButton("Piano", _pianoButtons),
+            CreateCategoryButton("Synth", _synthButtons),
+            CreateCategoryButton("Custom", _customButtons),
+            CreateCategoryButton("Undfnd", _undefinedButtons)
         };
 
-        loopButton.Click += (sender, e) => 
+        var categoryContainer = this.FindControl<ItemsControl>("CategoryControl");
+        
+        foreach (Button button in categoryButtons)
         {
-            AudioPlayer.Play(loop);
-        };
+            categoryContainer.Items.Add(button);
+        }
 
-        return loopButton;
+        DisplayButtons(_drumsButtons);
     }
 
     /// <summary>
@@ -108,36 +105,70 @@ public partial class MainWindow : Window
             {
                 case "Drums":
                     _drums.Add(newLoop);
-                    _drumsButtons.Add(CreateButton(newLoop));
+                    _drumsButtons.Add(CreateLoopButton(newLoop));
                     break;
                 case "Bass":
                     _bass.Add(newLoop);
-                    _bassButtons.Add(CreateButton(newLoop));
+                    _bassButtons.Add(CreateLoopButton(newLoop));
                     break;
                 case "Guitar":
                     _guitar.Add(newLoop);
-                    _guitarButtons.Add(CreateButton(newLoop));
+                    _guitarButtons.Add(CreateLoopButton(newLoop));
                     break;
                 case "Piano":
                     _piano.Add(newLoop);
-                    _pianoButtons.Add(CreateButton(newLoop));
+                    _pianoButtons.Add(CreateLoopButton(newLoop));
                     break;
                 case "Synth":
                     _synth.Add(newLoop);
-                    _synthButtons.Add(CreateButton(newLoop));
+                    _synthButtons.Add(CreateLoopButton(newLoop));
                     break;
                 case "Custom":
                     _custom.Add(newLoop);
-                    _customButtons.Add(CreateButton(newLoop));
+                    _customButtons.Add(CreateLoopButton(newLoop));
                     break;
                 case "Undefined":
                     _undefined.Add(newLoop);
-                    _undefinedButtons.Add(CreateButton(newLoop));
+                    _undefinedButtons.Add(CreateLoopButton(newLoop));
                     break;
             }
             // newLoop.OutputLoopInfo();
         }
         Console.WriteLine("All Loops Processed");
+    }
+    
+    private Button CreateLoopButton(LoopFile loop)
+    {
+        var loopButton = new Button
+        {
+            Content = loop.GetFileName(),
+            Width = 160,
+            Height = 40
+        };
+
+        loopButton.Click += (sender, e) => 
+        {
+            AudioPlayer.Play(loop);
+        };
+
+        return loopButton;
+    }
+
+    private Button CreateCategoryButton(String content, List<Button> btnList)
+    {
+        var categoryButton = new Button
+        {
+            Content = content,
+            Width = 80,
+            Height = 30
+        };
+
+        categoryButton.Click += (sender, e) => 
+        {
+            DisplayButtons(btnList);
+        };
+
+        return categoryButton;
     }
 
     /// <summary>
@@ -146,7 +177,7 @@ public partial class MainWindow : Window
     /// <param name="list">List of buttons to use</param>
     private void DisplayButtons(List<Button> list)
     {
-        var buttonsContainer = this.FindControl<ItemsControl>("ButtonsContainer");
+        var buttonsContainer = this.FindControl<ItemsControl>("ButtonsControl");
         
         if (list != CurrentCategory)
         {
@@ -159,11 +190,11 @@ public partial class MainWindow : Window
 
             CurrentCategory = list;
 
-            Console.WriteLine("All Buttons Displayed");
+            Console.WriteLine("Loop Buttons Displayed");
         }
     }
     
-    private async void NewLoopMenuItem_Click(object? sender, RoutedEventArgs e)
+    private async void CreateCustomLoop(object? sender, RoutedEventArgs e)
     {
         var dialog = new OpenFileDialog();
         dialog.Title = "Select File for Custom Loop";
@@ -181,13 +212,11 @@ public partial class MainWindow : Window
             }
 
             string sourceFilePath = result[0];
-            string fileName = Path.GetFileName(sourceFilePath);
-            string destinationFilePath = Path.Combine(customDir, fileName);
+            string destinationFilePath = Path.Combine(customDir, Path.GetFileName(sourceFilePath));
 
             File.Copy(sourceFilePath, destinationFilePath, true);
 
-            LoopFile newLoop = new LoopFile(destinationFilePath);
-            CreateButton(newLoop);
+            CreateLoopButton(new LoopFile(destinationFilePath));
         }
     }
     
