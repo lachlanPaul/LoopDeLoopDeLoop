@@ -14,7 +14,7 @@
 
         <Menu Grid.Row="0" Grid.ColumnSpan="3">
             <MenuItem Header="File">
-                <MenuItem Header="New Loop" />
+                <MenuItem Header="New Loop" Click="NewLoopMenuItem_Click"/>
             </MenuItem>
         </Menu>
 
@@ -22,13 +22,14 @@
             <ItemsControl Name="ButtonsContainer">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Orientation="Vertical" />
+                        <!-- <StackPanel Orientation="Vertical" /> -->
+                        <WrapPanel Orientation="Horizontal" ItemWidth="160"></WrapPanel>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
         </Border>
 
-        <GridSplitter Grid.Column="1" Width="1" Background="Black" HorizontalAlignment="Center" />
+        <GridSplitter Grid.Column="1" Width="1" Background="Black" ResizeDirection="Columns"/>
 
         <Border Grid.Column="2" Grid.Row="1" Background="MediumPurple">
         </Border>
