@@ -4,6 +4,8 @@ using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using Avalonia.VisualTree;
 using LoopDeLoopDeLoop.Components;
 
 namespace LoopDeLoopDeLoop.Views;
@@ -32,6 +34,7 @@ public partial class MainWindow : Window
     private List<Button> _undefinedButtons;
 
     private List<Button> CurrentCategory;
+    private ItemsControl CurrentColumn;
     
     public AudioPlayer AudioPlayer;
 
@@ -62,6 +65,7 @@ public partial class MainWindow : Window
         AudioPlayer = new AudioPlayer();
 
         InitializeComponent();
+        CreateSongColumns();
         CreateLoops();
         
         List<Button> categoryButtons = new List<Button> { 
@@ -136,8 +140,42 @@ public partial class MainWindow : Window
         }
         Console.WriteLine("All Loops Processed");
     }
+
+    private void CreateSongColumns()
+    {
+        for (int i = 2; i != 6; i++)
+        {
+            // This may be wasting power re-initilising these every loop, but they're only used here, and it's not much so idk
+            var grid = this.FindControl<Grid>("Grid");
+            
+            List<IBrush> colorList = new List<IBrush>
+            {
+                Brushes.Red,
+                Brushes.Blue,
+                Brushes.Green,
+                Brushes.Yellow
+            };
+            
+            var itemColumn = new ItemsControl
+            {
+                Name = "LoopCol" + $"{i - 1}",
+                Background = colorList[i - 2]  // TODO: Decide colour
+            };
+
+            itemColumn.PointerReleased += (sender, e) =>
+            {
+                CurrentColumn = itemColumn;
+                Console.WriteLine(CurrentColumn);
+            };
+            
+            Grid.SetColumn(itemColumn, i);
+            Grid.SetRow(itemColumn, 2);
+            
+            grid.Children.Add(itemColumn);
+        }
+    }
     
-    private Button CreateLoopButton(LoopFile loop)
+    private Button CreateLoopButton(LoopFile loop, bool isSongColumn = false)
     {
         var loopButton = new Button
         {
@@ -146,11 +184,36 @@ public partial class MainWindow : Window
             Height = 40
         };
 
-        loopButton.Click += (sender, e) => 
+        loopButton.Click += (sender, e) =>
         {
             AudioPlayer.Play(loop);
         };
 
+        var contextMenu = new ContextMenu();
+
+        var addToColumn = new MenuItem { Header = "Add To Currently Selected Column" };
+        addToColumn.Click += (sender, e) =>
+        {
+            if (CurrentColumn != null)
+            {
+                Button button = CreateLoopButton(loop, true);
+                CurrentColumn.Items.Add(button);
+            }
+        };
+        contextMenu.Items.Add(addToColumn);
+
+        if (isSongColumn)
+        {
+            contextMenu.Items.Remove(addToColumn);
+            var removeFromColumn = new MenuItem { Header = "Remove From Column" };
+            removeFromColumn.Click += (sender, e) =>
+            {
+                CurrentColumn.Items.Remove(loopButton);
+            };
+            contextMenu.Items.Add(removeFromColumn);
+        }
+
+        loopButton.ContextMenu = contextMenu;
         return loopButton;
     }
 
@@ -159,7 +222,7 @@ public partial class MainWindow : Window
         var categoryButton = new Button
         {
             Content = content,
-            Width = 80,
+            Width = 70,
             Height = 30
         };
 

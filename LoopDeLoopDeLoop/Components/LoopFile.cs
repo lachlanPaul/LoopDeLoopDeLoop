@@ -103,7 +103,7 @@ public class LoopFile
             }
         }
         // If we reach this point, no BPM was found, so we return 0.
-        #warning Something went wrong and a loop's BPM could not be found, adding to the ? category
+        #warning Something went wrong and a loop's BPM could not be found, setting to 0
         return 0;
     }
 
