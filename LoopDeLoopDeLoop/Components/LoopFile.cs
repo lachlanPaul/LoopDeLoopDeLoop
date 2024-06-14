@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using LibVLCSharp.Shared;
 
 namespace LoopDeLoopDeLoop.Components;
 
@@ -8,6 +9,7 @@ public class LoopFile
     private string FilePath;
     private string FileName;
     private string Category;
+    private long Duration;
     private int BPM;
     
     public LoopFile(string fp)
@@ -15,6 +17,7 @@ public class LoopFile
         FilePath = fp;
         FileName = FindLoopName();
         Category = FindLoopCategory();
+        Duration = FindLoopDuration();
         BPM = FindLoopBPM();
         
         // Console.WriteLine($"Successfully processed {FileName}");
@@ -65,6 +68,13 @@ public class LoopFile
 
         #warning Suitable category could not be found, setting to "Undefined"
         return "Undefined";
+    }
+
+    private long FindLoopDuration()
+    {
+        var vlc = new LibVLC();
+        var media = new Media(vlc, FilePath, FromType.FromPath);
+        return media.Duration;
     }
     
     /// <summary>
@@ -122,11 +132,16 @@ public class LoopFile
         return Category;
     }
 
+    public long GetDuration()
+    {
+        return Duration;
+    }
+
     public int GetBPM()
     {
         return BPM;
     }
-
+    
     /// <summary>
     /// Prints all information on the Loop File to the console. Used for debugging
     /// </summary>
@@ -135,6 +150,7 @@ public class LoopFile
         Console.WriteLine($"\nName: {FileName}");
         Console.WriteLine($"File Path: {FilePath}");
         Console.WriteLine($"Category: {Category}");
+        Console.WriteLine($"Duration: {Duration}");
         Console.WriteLine($"BPM: {BPM}\n");
     }
 }

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using Avalonia.VisualTree;
 using LoopDeLoopDeLoop.Components;
 
 namespace LoopDeLoopDeLoop.Views;
@@ -34,9 +36,15 @@ public partial class MainWindow : Window
     private List<Button> _undefinedButtons;
 
     private List<Button> CurrentCategory;
+
+    private List<LoopFile> col1Loops;
+    private List<LoopFile> col2Loops;
+    private List<LoopFile> col3Loops;
+    private List<LoopFile> col4Loops;
+    
     private ItemsControl CurrentColumn;
     
-    public AudioPlayer AudioPlayer;
+    public AudioPlayer audioPlayer;
 
 
     public MainWindow()
@@ -62,11 +70,17 @@ public partial class MainWindow : Window
         _undefined = new List<LoopFile>();
         _undefinedButtons = new List<Button>();
 
-        AudioPlayer = new AudioPlayer();
+        audioPlayer = new AudioPlayer();
 
         InitializeComponent();
         CreateSongColumns();
         CreateLoops();
+        CreateMediaControl();
+
+        col1Loops = new List<LoopFile>();
+        col2Loops = new List<LoopFile>();
+        col3Loops = new List<LoopFile>();
+        col4Loops = new List<LoopFile>();
         
         List<Button> categoryButtons = new List<Button> { 
             CreateCategoryButton("Drums", _drumsButtons),
@@ -136,7 +150,7 @@ public partial class MainWindow : Window
                     _undefinedButtons.Add(CreateLoopButton(newLoop));
                     break;
             }
-            // newLoop.OutputLoopInfo();
+            newLoop.OutputLoopInfo();
         }
         Console.WriteLine("All Loops Processed");
     }
@@ -177,16 +191,18 @@ public partial class MainWindow : Window
     
     private Button CreateLoopButton(LoopFile loop, bool isSongColumn = false)
     {
+        List<LoopFile> buttonCol = new List<LoopFile>();
+        
         var loopButton = new Button
         {
             Content = loop.GetFileName(),
             Width = 160,
-            Height = 40
+            Height = 40,
         };
 
         loopButton.Click += (sender, e) =>
         {
-            AudioPlayer.Play(loop);
+            audioPlayer.Play(loop);
         };
 
         var contextMenu = new ContextMenu();
@@ -198,6 +214,26 @@ public partial class MainWindow : Window
             {
                 Button button = CreateLoopButton(loop, true);
                 CurrentColumn.Items.Add(button);
+                
+                switch (CurrentColumn.Name)
+                {
+                    case "LoopCol1":
+                        col1Loops.Add(loop);
+                        buttonCol = col1Loops;
+                        break;
+                    case "LoopCol2":
+                        col2Loops.Add(loop);
+                        buttonCol = col2Loops;
+                        break;
+                    case "LoopCol3":
+                        col3Loops.Add(loop);
+                        buttonCol = col3Loops;
+                        break;
+                    case "LoopCol4":
+                        col4Loops.Add(loop);
+                        buttonCol = col4Loops;
+                        break;
+                }
             }
         };
         contextMenu.Items.Add(addToColumn);
@@ -209,6 +245,7 @@ public partial class MainWindow : Window
             removeFromColumn.Click += (sender, e) =>
             {
                 CurrentColumn.Items.Remove(loopButton);
+                buttonCol.Remove(loop);
             };
             contextMenu.Items.Add(removeFromColumn);
         }
@@ -254,6 +291,89 @@ public partial class MainWindow : Window
             CurrentCategory = list;
 
             Console.WriteLine("Loop Buttons Displayed");
+        }
+    }
+
+    private void CreateMediaControl()
+    {
+        var playButton = new Button
+        {
+            Width = 50,
+            Height = 50,
+            CornerRadius = new CornerRadius(10)
+        };
+        
+        var playButtonContent = new TextBlock
+        {
+            Text = "▶",
+            TextAlignment = TextAlignment.Center,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+        };
+        playButton.Content = playButtonContent;
+
+        playButton.Click += async (sender, e) =>
+        {
+            await PlayColumnLoops();
+        };
+
+        var stopButton = new Button
+        {
+            Width = 50,
+            Height = 50,
+            CornerRadius = new CornerRadius(10)
+        };
+
+        var stopButtonContent = new TextBlock()
+        {
+            Text = "⏹",
+            TextAlignment = TextAlignment.Center,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+        };
+        stopButton.Content = stopButtonContent;
+
+        stopButton.Click += (sender, e) =>
+        {
+            audioPlayer.Stop();
+        };
+        
+        var grid = this.FindControl<Grid>("Grid");
+        
+        var stackPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal
+        };
+
+        stackPanel.Children.Add(playButton);
+        stackPanel.Children.Add(stopButton);
+
+        Grid.SetColumn(stackPanel, 1);
+        Grid.SetRow(stackPanel, 1);
+        grid.Children.Add(stackPanel);
+    }
+
+    /// <summary>
+    /// Plays all the loops in order 2 times each.
+    /// </summary>
+    private async Task PlayColumnLoops()
+    {
+        List<List<LoopFile>> columns = new List<List<LoopFile>> { col1Loops, col2Loops, col3Loops, col4Loops };
+
+        foreach (var column in columns)
+        {
+            List<Task> playTasks = new List<Task>();
+
+            foreach (var loop in column)
+            {
+                playTasks.Add(Task.Run(() =>
+                {
+                    audioPlayer.Play(loop);
+                    Task.Delay((int)loop.GetDuration()).Wait();
+                    audioPlayer.Stop();
+                }));
+            }
+
+            // Wait for all loops in the column to finish playing
+            await Task.WhenAll(playTasks);
         }
     }
     

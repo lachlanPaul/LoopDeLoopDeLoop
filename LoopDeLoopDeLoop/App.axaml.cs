@@ -12,8 +12,7 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
-        // LibVLCSharp
-        Core.Initialize();
+        Core.Initialize(); // LibVLCSharp
     }
 
     public override void OnFrameworkInitializationCompleted()

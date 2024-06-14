@@ -22,6 +22,8 @@
             </MenuItem>
         </Menu>
 
+        <Button></Button>
+        
         <Border Grid.Column="0" Grid.Row="1" Background="DeepPink">
             <ItemsControl Name="CategoryControl">
                 <ItemsControl.ItemsPanel>
@@ -31,12 +33,6 @@
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
         </Border>
-        
-        <!-- <Border Grid.Column="1" Grid.Row="1" Background="Aqua"></Border> -->
-        <!-- <Border Grid.Column="2" Grid.Row="1" Background="Brown" x:Name="LoopCol1"></Border> -->
-        <!-- <Border Grid.Column="3" Grid.Row="1" Background="Blue" x:Name="LoopCol2"></Border> -->
-        <!-- <Border Grid.Column="4" Grid.Row="1" Background="Red" x:Name="LoopCol3"></Border> -->
-        <!-- <Border Grid.Column="5" Grid.Row="1" Background="Chocolate" x:Name="LoopCol4"></Border> -->
         
         <Border Grid.Column="0" Grid.Row="2" Background="Purple">
             <ScrollViewer>
